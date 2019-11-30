@@ -8,12 +8,13 @@ import { useSelection } from "../store/selection";
 import { useCollapser } from "../store/collapser";
 import { BackgroundLogo } from "./tree/background-logo";
 import { useSearch } from "../store/search";
-import { scrollIntoView } from "./utils";
+import { scrollIntoView, cssToPx } from "./utils";
 import { ID } from "../store/types";
 
 export function TreeView() {
 	const store = useStore();
 	const nodeList = useObserver(() => store.nodeList.$);
+	const treeDepth = useObserver(() => store.treeDepth.$);
 	const { collapseNode, collapsed } = useCollapser();
 	const { selected, selectNext, selectPrev } = useSelection();
 
@@ -31,6 +32,30 @@ export function TreeView() {
 
 	const onMouseLeave = useCallback(() => store.actions.highlightNode(null), []);
 	const ref = useRef<HTMLDivElement | null>(null);
+	const paneRef = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		if (ref.current && paneRef.current) {
+			const available = ref.current.offsetWidth;
+			const actual = paneRef.current.offsetWidth;
+			const diff = actual - available;
+			if (diff > 0) {
+				const current = cssToPx(
+					getComputedStyle(ref.current).getPropertyValue("--indent-depth"),
+				);
+
+				const indent =
+					current - Math.round((diff / (treeDepth || 1)) * 100) / 100;
+
+				// Only change indentation when it's smaller
+				console.log({ indent, current });
+				if (indent < current) {
+					ref.current.style.setProperty("--indent-depth", `${indent}px`);
+				}
+			}
+		}
+	}, [nodeList]);
+
 	return (
 		<div
 			ref={ref}
@@ -40,18 +65,20 @@ export function TreeView() {
 			data-tree={true}
 			onMouseLeave={onMouseLeave}
 		>
-			{nodeList.length === 0 && (
-				<div class={s.empty}>
-					<BackgroundLogo class={s.bgLogo} />
-					<p>
-						<b>Connected</b>, waiting for nodes to load...
-					</p>
-				</div>
-			)}
-			{nodeList.map(id => (
-				<TreeItem key={id} id={id} />
-			))}
-			<HighlightPane treeDom={ref.current} />
+			<div class={s.pane} ref={paneRef}>
+				{nodeList.length === 0 && (
+					<div class={s.empty}>
+						<BackgroundLogo class={s.bgLogo} />
+						<p>
+							<b>Connected</b>, waiting for nodes to load...
+						</p>
+					</div>
+				)}
+				{nodeList.map(id => (
+					<TreeItem key={id} id={id} />
+				))}
+				<HighlightPane treeDom={ref.current} />
+			</div>
 		</div>
 	);
 }

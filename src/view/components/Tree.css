@@ -15,6 +15,14 @@
 	height: 100%;
 }
 
+.pane {
+	/**
+	 * Hack to get the parent to grow with its children, see:
+	 * https://stackoverflow.com/questions/17291514/how-to-force-parent-div-to-expand-by-child-div-width-padding-margin-box
+	 */
+	display: inline-block;
+}
+
 .empty {
 	display: flex;
 	flex: 1;

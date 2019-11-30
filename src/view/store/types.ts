@@ -44,6 +44,7 @@ export interface Store {
 	nodes: Observable<Map<ID, DevNode>>;
 	nodeList: Observable<ID[]>;
 	theme: Observable<Theme>;
+	treeDepth: Observable<number>;
 	search: ReturnType<typeof createSearchStore>;
 	modal: ReturnType<typeof createModalState>;
 	filter: ReturnType<typeof createFilterStore>;
